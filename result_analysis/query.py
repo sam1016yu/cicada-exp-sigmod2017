@@ -42,7 +42,7 @@ def init():
 
 
 def check_count(df):
-  expected_total_seqs = 5
+  expected_total_seqs = 1
 
   if (df['COUNT(seq)'] < expected_total_seqs).any():
     print('')
@@ -78,7 +78,7 @@ def filter(selectors, conds, group_by):
       cond_s += ' AND %s IS NULL' % k
     else:
       cond_s += ' AND %s = %s' % (k, repr(v))
-  cond_s = cond_s[5:]
+  cond_s = cond_s[1:]
   # cond_s = ' AND '.join(['%s=%s' % (k, repr(v)) for k, v in conds.items()])
 
   results = query('''
