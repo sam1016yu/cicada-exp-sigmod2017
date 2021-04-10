@@ -28,17 +28,9 @@ Installing packages
 
 	# common
 	sudo apt-get update
-	sudo apt-get install -y build-essential cmake git g++-5 libjemalloc-dev libnuma-dev
-	# for Silo
-	sudo apt-get install -y libdb6.0++-dev
-	# for FOEDUS/MOCC
-	sudo apt-get install -y libgoogle-perftools-dev papi-tools
-
-	# for experiments
-	sudo apt-get install -y psmisc python3
+	sudo apt-get install -y build-essential cmake git g++-5 libjemalloc-dev libnuma-dev libdb6.0++-dev libgoogle-perftools-dev papi-tools psmisc python3 python3-pip
 
 	# for analysis
-	sudo apt-get install -y python3-pip
 	sudo apt-get install -y texlive-generic-recommended texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended texlive-fonts-extra dvipng
 	pip3 install --user 'pandas>=0.20,<0.21' 'pandasql>=0.7,<0.8' 'matplotlib>=1.5,<2.0'
 
