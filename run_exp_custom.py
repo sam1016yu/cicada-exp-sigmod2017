@@ -30,6 +30,7 @@ def replace_def(conf, name, value):
 
 
 def set_alg(conf, alg, **kwargs):
+  print("***Alg"+alg)
   conf = replace_def(conf, 'CC_ALG', alg.partition('-')[0].partition('+')[0])
   conf = replace_def(conf, 'ISOLATION_LEVEL', 'SERIALIZABLE')
 
@@ -57,6 +58,7 @@ def set_alg(conf, alg, **kwargs):
   conf = replace_def(conf, 'RCU_ALLOC', 'true')
   if alg.startswith('MICA'):
       # ~8192 huge pages (16 GiB) for RCU
+    print("Starts with mica")
     conf = replace_def(conf, 'RCU_ALLOC_SIZE', str(int(8192 * 0.99) * 2 * 1048576) + 'UL')
   else:
     conf = replace_def(conf, 'RCU_ALLOC_SIZE', str(int(hugepage_count[alg] * 0.99) * 2 * 1048576) + 'UL')
@@ -175,35 +177,65 @@ prefix = ''
 suffix = ''
 # total_seqs = 5
 total_seqs = 1
-max_retries = 3
+max_retries = 1
+
+# hugepage_count = {
+#   # 32 GiB
+#   'SILO': 32 * 1024 / 2,
+#   'TICTOC': 32 * 1024 / 2,
+#   'NO_WAIT': 32 * 1024 / 2,
+#   # 32 GiB + (16 GiB for RCU)
+#   'MICA': (32 + 16) * 1024 / 2,
+#   'MICA+INDEX': (32 + 16) * 1024 / 2,
+#   # 96 GiB
+#   'HEKATON': 96 * 1024 / 2,
+
+#   # 48 GiB (16 threads, 28 warehouses use much more memory for some reason)
+#   'SILO-REF': 48 * 1024 / 2,
+#   'SILO-REF-BACKOFF': 48 * 1024 / 2,
+
+#   # 80 GiB (using too much hugepages can reduce tput)
+#   'ERMIA-SI-REF': 80 * 1024 / 2,
+#   'ERMIA-SI-REF-BACKOFF': 80 * 1024 / 2,
+#   'ERMIA-SSI-REF': 80 * 1024 / 2,
+#   'ERMIA-SSI-REF-BACKOFF': 80 * 1024 / 2,
+#   'ERMIA-SI_SSN-REF': 80 * 1024 / 2,
+#   'ERMIA-SI_SSN-REF-BACKOFF': 80 * 1024 / 2,
+
+#   # 112 GiB
+#   'FOEDUS-MOCC-REF': 112 * 1024 / 2,
+#   'FOEDUS-OCC-REF': 112 * 1024 / 2,
+# }
+
 
 hugepage_count = {
   # 32 GiB
-  'SILO': 32 * 1024 / 2,
-  'TICTOC': 32 * 1024 / 2,
-  'NO_WAIT': 32 * 1024 / 2,
+  'SILO': 200 * 1024 / 2,
+  'TICTOC': 200 * 1024 / 2,
+  'NO_WAIT': 200 * 1024 / 2,
   # 32 GiB + (16 GiB for RCU)
-  'MICA': (32 + 16) * 1024 / 2,
-  'MICA+INDEX': (32 + 16) * 1024 / 2,
+  'MICA': 4* (32 + 16) * 1024 / 2,
+  'MICA+INDEX': 4*(32 + 16) * 1024/2,
   # 96 GiB
-  'HEKATON': 96 * 1024 / 2,
+  'HEKATON': 200 * 1024 / 2,
 
   # 48 GiB (16 threads, 28 warehouses use much more memory for some reason)
-  'SILO-REF': 48 * 1024 / 2,
-  'SILO-REF-BACKOFF': 48 * 1024 / 2,
+  'SILO-REF': 200 * 1024 / 2,
+  'SILO-REF-BACKOFF': 200 * 1024 / 2,
 
   # 80 GiB (using too much hugepages can reduce tput)
-  'ERMIA-SI-REF': 80 * 1024 / 2,
-  'ERMIA-SI-REF-BACKOFF': 80 * 1024 / 2,
-  'ERMIA-SSI-REF': 80 * 1024 / 2,
-  'ERMIA-SSI-REF-BACKOFF': 80 * 1024 / 2,
-  'ERMIA-SI_SSN-REF': 80 * 1024 / 2,
-  'ERMIA-SI_SSN-REF-BACKOFF': 80 * 1024 / 2,
+  'ERMIA-SI-REF': 200 * 1024 / 2,
+  'ERMIA-SI-REF-BACKOFF': 200 * 1024 / 2,
+  'ERMIA-SSI-REF': 200 * 1024 / 2,
+  'ERMIA-SSI-REF-BACKOFF': 200 * 1024 / 2,
+  'ERMIA-SI_SSN-REF': 200 * 1024 / 2,
+  'ERMIA-SI_SSN-REF-BACKOFF': 200 * 1024 / 2,
 
   # 112 GiB
-  'FOEDUS-MOCC-REF': 112 * 1024 / 2,
-  'FOEDUS-OCC-REF': 112 * 1024 / 2,
+  'FOEDUS-MOCC-REF': 200 * 1024 / 2,
+  'FOEDUS-OCC-REF': 200 * 1024 / 2,
 }
+
 
 def gen_filename(exp):
   s = ''
@@ -275,18 +307,18 @@ def format_exp(exp):
 
 
 def enum_exps(seq):
-  all_algs = ['MICA', 'MICA+INDEX', #'MICA+FULLINDEX',
-              'SILO', 'TICTOC', 'HEKATON', 'NO_WAIT',
-              'SILO-REF',
-              # 'SILO-REF-BACKOFF',
-              #'ERMIA-SI-REF',
-              #'ERMIA-SSI-REF',
-              'ERMIA-SI_SSN-REF',
-              # 'ERMIA-SI-REF-BACKOFF',
-              # 'ERMIA-SSI-REF-BACKOFF',
-              # 'ERMIA-SI_SSN-REF-BACKOFF',
-              'FOEDUS-MOCC-REF',
-              'FOEDUS-OCC-REF',
+  all_algs = ['MICA+INDEX' #'MICA+FULLINDEX',
+              #'SILO', 'TICTOC', 'HEKATON']
+            #   'SILO-REF',
+            #   # 'SILO-REF-BACKOFF',
+            #   #'ERMIA-SI-REF',
+            #   #'ERMIA-SSI-REF',
+            #   'ERMIA-SI_SSN-REF',
+            #   # 'ERMIA-SI-REF-BACKOFF',
+            #   # 'ERMIA-SSI-REF-BACKOFF',
+            #   # 'ERMIA-SI_SSN-REF-BACKOFF',
+              # 'FOEDUS-MOCC-REF',
+              # 'FOEDUS-OCC-REF',
              ]
 
   macrobenchs = ['macrobench']
@@ -301,117 +333,64 @@ def enum_exps(seq):
         continue
       if tag == 'native-macrobench' and alg not in ('MICA', 'MICA+INDEX', 'MICA+FULLINDEX'):
         continue
-
+      
+      # for thread_count in [28]:
       for thread_count in [1, 2] + list(range(4, max_thread_count + 1, 4)):
         common = { 'seq': seq, 'tag': tag, 'alg': alg, 'thread_count': thread_count }
-
         if alg in ('FOEDUS-MOCC-REF', 'FOEDUS-OCC-REF') and thread_count < 4:
           # Broken in FOEDUS
           continue
-
         # YCSB
         # if alg.find('-REF') == -1:
         if True:
           ycsb = dict(common)
           # total_count = 10 * 1000 * 1000
-          for total_count in [int(20e6),int(40e6),int(60e6)]:
+          for total_count in [int(16e7),int(18e7),int(20e7),int(25e7),int(30e7),int(35e7),int(40e7)]:
             ycsb.update({ 'bench': 'YCSB', 'total_count': total_count })
-
             # record_size = 1000
             record_size = 100
             req_per_query = 16
             tx_count = 200000
             ycsb.update({ 'record_size': record_size, 'req_per_query': req_per_query, 'tx_count': tx_count })
-
-            # for read_ratio in [0.50, 0.95]:
-              # for zipf_theta in [0.00, 0.90, 0.99]:
-              # for zipf_theta in [0.00, 0.99]:
-                #if zipf_theta >= 0.95:
-                #  if read_ratio == 0.50 and alg == 'NO_WAIT': continue
-                #  if read_ratio == 0.50 and alg == 'HEKATON': continue
             ycsb.update({ 'read_ratio': 0.50, 'zipf_theta': 0.99 })
             yield dict(ycsb)
 
-          # #record_size = 1000
-          # record_size = 100
-          # req_per_query = 1
-          # tx_count = 2000000
-          # ycsb.update({ 'record_size': record_size, 'req_per_query': req_per_query, 'tx_count': tx_count })
-
-          # for read_ratio in [0.50, 0.95]:
-          #   # for zipf_theta in [0.00, 0.90, 0.99]:
-          #   for zipf_theta in [0.00, 0.99]:
-          #     ycsb.update({ 'read_ratio': read_ratio, 'zipf_theta': zipf_theta })
-          #     yield dict(ycsb)
-
-        # TPCC
-        if alg.find('-REF') == -1:
-          tpcc = dict(common)
-          tx_count = 200000
-          tpcc.update({ 'bench': 'TPCC', 'tx_count': tx_count })
-
-          # for warehouse_count in [1, 4, 16, max_thread_count]:
-          # for warehouse_count in [1, 4, max_thread_count]:
-          #   if tag != 'macrobench': continue
-          #   tpcc.update({ 'warehouse_count': warehouse_count })
-          #   yield dict(tpcc)
-
-          for warehouse_count in [2] + list(range(4, max_thread_count + 1, 4)):
-            if tag != 'macrobench': continue
-            if thread_count not in [max_thread_count, warehouse_count]: continue
-            tpcc.update({ 'warehouse_count': warehouse_count/2 })
-            yield dict(tpcc)
-
-        # full TPCC
-        if alg not in ('MICA',):  # MICA must use the native index
-          tpcc = dict(common)
-          tx_count = 200000
-          tpcc.update({ 'bench': 'TPCC-FULL', 'tx_count': tx_count })
-
-          # # for warehouse_count in [1, 4, 16, max_thread_count]:
-          # for warehouse_count in [1, 4, max_thread_count]:
-          #   if tag != 'macrobench': continue
-          #   tpcc.update({ 'warehouse_count': warehouse_count })
-          #   yield dict(tpcc)
-
-          for warehouse_count in [2] + list(range(4, max_thread_count + 1, 4)):
-            if tag != 'macrobench': continue
-            if thread_count not in [max_thread_count, warehouse_count]: continue
-            tpcc.update({ 'warehouse_count': warehouse_count/2 })
-            yield dict(tpcc)
-
-        # full TPCC with simple index update
-        # (delayed index update, no phantom avoidance)
-        # if alg not in ('MICA',) and alg.find('-REF') == -1:
+        # # TPCC
+        # if alg.find('-REF') == -1:
         #   tpcc = dict(common)
         #   tx_count = 200000
-        #   tpcc.update({ 'bench': 'TPCC-FULL', 'tx_count': tx_count,
-        #     'simple_index_update': 1 })
+        #   tpcc.update({ 'bench': 'TPCC', 'tx_count': tx_count })
 
         #   # for warehouse_count in [1, 4, 16, max_thread_count]:
-        #   for warehouse_count in [1, 4, max_thread_count]:
-        #     if tag != 'macrobench': continue
-        #     tpcc.update({ 'warehouse_count': warehouse_count })
-        #     yield dict(tpcc)
+        #   # for warehouse_count in [1, 4, max_thread_count]:
+        #   #   if tag != 'macrobench': continue
+        #   #   tpcc.update({ 'warehouse_count': warehouse_count })
+        #   #   yield dict(tpcc)
 
-        #   for warehouse_count in [1, 2] + list(range(4, max_thread_count + 1, 4)):
+        #   for warehouse_count in [1,2] + list(range(4, max_thread_count + 1, 4)):
         #     if tag != 'macrobench': continue
         #     if thread_count not in [max_thread_count, warehouse_count]: continue
-        #     tpcc.update({ 'warehouse_count': warehouse_count })
+        #     tpcc.update({ 'warehouse_count': warehouse_count*4})
         #     yield dict(tpcc)
+         
 
-        # TATP
-        # if alg.find('-REF') == -1:
-        #   tatp = dict(common)
+        # # full TPCC
+        # if alg not in ('MICA',):  # MICA must use the native index
+        #   tpcc = dict(common)
         #   tx_count = 200000
-        #   tatp.update({ 'bench': 'TATP', 'tx_count': tx_count })
-        #
-        #   # for scale_factor in [1, 2, 5, 10, 20, 50, 100]:
-        #   # for scale_factor in [1, 10]:
-        #   for scale_factor in [1]:
+        #   tpcc.update({ 'bench': 'TPCC-FULL', 'tx_count': tx_count })
+
+        #   # # for warehouse_count in [1, 4, 16, max_thread_count]:
+        #   # for warehouse_count in [1, 4, max_thread_count]:
+        #   #   if tag != 'macrobench': continue
+        #   #   tpcc.update({ 'warehouse_count': warehouse_count })
+        #   #   yield dict(tpcc)
+
+        #   for warehouse_count in [1,2] + list(range(4, max_thread_count + 1, 4)):
         #     if tag != 'macrobench': continue
-        #     tatp.update({ 'scale_factor': scale_factor })
-        #     yield dict(tatp)
+        #     if thread_count not in [max_thread_count, warehouse_count]: continue
+        #     tpcc.update({ 'warehouse_count': warehouse_count*4 })
+        #     yield dict(tpcc)
 
       for thread_count in [max_thread_count]:
         common = { 'seq': seq, 'tag': tag, 'alg': alg, 'thread_count': thread_count }
@@ -421,7 +400,7 @@ def enum_exps(seq):
         if True:
           ycsb = dict(common)
           # total_count = 10 * 1000 * 1000
-          for total_count in [int(20e6),int(40e6),int(60e6)]:
+          for total_count in [int(16e7),int(18e7),int(20e7),int(25e7),int(30e7),int(35e7),int(40e7)]:
             ycsb.update({ 'bench': 'YCSB', 'total_count': total_count })
 
             # record_size = 1000
@@ -987,7 +966,7 @@ def make_foedus_cmd(exp):
   else: assert False
   cmd += ' -fork_workers=false' # forking seems to ignore thread count limit
   cmd += ' -nvm_folder=/dev/shm'
-  cmd += ' -volatile_pool_size=20'  # this determines overall memory use
+  cmd += ' -volatile_pool_size=30'  # this determines overall memory use
   cmd += ' -snapshot_pool_size=2'
   cmd += ' -reducer_buffer_size=1'
   cmd += ' -loggers_per_node=2'
@@ -1273,7 +1252,7 @@ if __name__ == '__main__':
 
   killall()
 
-  remove_stale()
+  # remove_stale()
   # update_filenames()
 
   if argv[0].upper() == 'RUN':

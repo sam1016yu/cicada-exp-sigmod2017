@@ -95,6 +95,12 @@ Analyzing experiment output
  * Estimated time: 15 minutes
  * Analysis output files are created under result\_analysis/output\_$EXPNAME
 
+
+ Cicada NUMA memory setting
+ ------------------------------
+
+ DBx1000/wl.cpp,line26
+
 Analysis output
 ---------------
 
