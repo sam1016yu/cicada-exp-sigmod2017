@@ -100,6 +100,7 @@ Analyzing experiment output
  ------------------------------
 
  DBx1000/wl.cpp,line26
+ Need to change cicadaengine/scripts/setup.sh::44-45 as well
 
 Analysis output
 ---------------
