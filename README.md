@@ -61,7 +61,7 @@ Configuring system
 Downloading source code
 -----------------------
 
-	git clone --recursive https://github.com/efficient/cicada-exp-sigmod2017.git
+	git clone --recursive https://github.com/sam1016yu/cicada-exp-sigmod2017.git
 
  * Estimated time: 1 minute
 
